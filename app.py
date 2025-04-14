@@ -1,23 +1,16 @@
 from flask import Flask, request, jsonify
-import json
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/filter", methods=["POST"])
 def filter_data():
-    if "file" not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
-
-    file = request.files["file"]
-
     try:
-        content = json.load(file)
+        content = request.get_json()  # ✅ accepts raw JSON
         data = content.get("data", [])
-        filtered = [item for item in data if item.get("is_active") is True]
+        filtered = [entry for entry in data if entry.get("is_active") is True]
         return jsonify({"data": filtered})
-    except json.JSONDecodeError:
-        return jsonify({"error": "Invalid JSON"}), 400
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return jsonify({"error": str(e)}), 400
